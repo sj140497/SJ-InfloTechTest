@@ -1,56 +1,65 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using FluentResults;
+using Microsoft.EntityFrameworkCore;
 using UserManagement.Data;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 
 namespace UserManagement.Services.Domain.Implementations;
 
-public class UserLogService : IUserLogService
+public class UserLogService(IDataContext dataContext) : IUserLogService
 {
-    private readonly IDataContext _dataContext;
-
-    public UserLogService(IDataContext dataContext)
+    public async Task<Result> LogActionAsync(long userId, string action, string? description = null, string? details = null)
     {
-        _dataContext = dataContext;
-    }
-
-    public void LogAction(long userId, string action, string? description = null, string? details = null)
-    {
-        var log = new UserLog
+        try
         {
-            UserId = userId,
-            Action = action,
-            Description = description,
-            Details = details,
-            Timestamp = DateTime.UtcNow
-        };
+            var log = new UserLog
+            {
+                UserId = userId,
+                Action = action,
+                Description = description,
+                Details = details,
+                Timestamp = DateTime.UtcNow
+            };
 
-        _dataContext.Create(log);
+            await dataContext.CreateAsync(log);
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail($"Error logging action: {ex.Message}");
+        }
     }
 
-    public IEnumerable<UserLog> GetUserLogs(long userId)
+    public async Task<IEnumerable<UserLog>> GetUserLogsAsync(long userId)
     {
-        return _dataContext.GetAll<UserLog>()
+        return await dataContext.GetAll<UserLog>()
             .Where(log => log.UserId == userId)
-            .OrderByDescending(log => log.Timestamp);
+            .OrderByDescending(log => log.Timestamp)
+            .ToListAsync();
     }
 
-    public IEnumerable<UserLog> GetLogsByUserId(long userId)
+    public async Task<Result<UserLog>> GetLogByIdAsync(long id)
     {
-        return GetUserLogs(userId);
+        try
+        {
+            var log = await dataContext.GetByIdAsync<UserLog>(id);
+
+            return log == null ? 
+                Result.Fail<UserLog>($"Log with Id {id} not found") 
+                : Result.Ok(log);
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail<UserLog>($"Error retrieving log: {ex.Message}");
+        }
     }
 
-    public UserLog? GetLogById(long id)
-    {
-        return _dataContext.GetAll<UserLog>()
-            .FirstOrDefault(log => log.Id == id);
-    }
-
-    public IEnumerable<UserLog> GetAllLogs()
-    {
-        return _dataContext.GetAll<UserLog>()
-            .OrderByDescending(log => log.Timestamp);
-    }
+    public async Task<IEnumerable<UserLog>> GetAllLogsAsync() =>
+        await dataContext.GetAll<UserLog>()
+        .OrderByDescending(log => log.Timestamp)
+        .ToListAsync();
 }

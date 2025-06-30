@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using FluentResults;
 using UserManagement.Models;
 
 namespace UserManagement.Services.Domain.Interfaces;
@@ -10,32 +12,32 @@ public interface IUserService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    IEnumerable<User> FilterByActive(bool isActive);
-    IEnumerable<User> GetAll();
+    Task<IEnumerable<User>> FilterByActiveAsync(bool isActive);
+    Task<IEnumerable<User>> GetAllAsync();
     
     /// <summary>
     /// Get a user by ID
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    User? GetById(long id);
+    Task<Result<User>> GetByIdAsync(long id);
     
     /// <summary>
     /// Create a new user
     /// </summary>
     /// <param name="user"></param>
-    void Create(User user);
+    Task<Result<User>> CreateAsync(User user);
     
     /// <summary>
     /// Update an existing user
     /// </summary>
     /// <param name="user"></param>
-    void Update(User user);
+    Task<Result<User>> UpdateAsync(User user);
     
     /// <summary>
     /// Delete a user by ID
     /// </summary>
     /// <param name="id"></param>
-    /// <returns>True if user was found and deleted, false otherwise</returns>
-    bool Delete(long id);
+    /// <returns>Result indicating success or failure</returns>
+    Task<Result> DeleteAsync(long id);
 }
