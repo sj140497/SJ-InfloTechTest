@@ -1,7 +1,7 @@
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
-using UserManagement.WebMS.Controllers;
+using UserManagement.Web.Controllers;
 
 namespace UserManagement.Data.Tests;
 
@@ -44,5 +44,6 @@ public class UserControllerTests
     }
 
     private readonly Mock<IUserService> _userService = new();
-    private UsersController CreateController() => new(_userService.Object);
+    private readonly Mock<IUserLogService> _userLogService = new();
+    private UsersController CreateController() => new(_userService.Object, _userLogService.Object);
 }
