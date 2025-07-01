@@ -1,6 +1,6 @@
 ﻿namespace UserManagement.Common.DTOs.Contracts;
 
-public record CreateUserDto(
+public sealed record CreateUserDto(
     string Forename,
     string Surname,
     string Email,

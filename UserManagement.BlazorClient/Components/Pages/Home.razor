@@ -1,7 +1,168 @@
 ﻿@page "/"
+@inject NavigationManager Navigation
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home - User Management System</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <div class="hero-section">
+                <i class="fas fa-users fa-4x text-primary mb-3"></i>
+                <h1 class="display-4 fw-bold text-primary">User Management System</h1>
+                <p class="lead text-muted">Manage users and track their activities efficiently</p>
+            </div>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row g-4">
+                <!-- Users Card -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-users fa-3x text-primary"></i>
+                            </div>
+                            <h4 class="card-title">User Management</h4>
+                            <p class="card-text text-muted">
+                                View, create, edit, and manage all users in the system. 
+                                Track user status and personal information.
+                            </p>
+                            <button class="btn btn-primary btn-lg" @onclick="GoToUsers">
+                                <i class="fas fa-arrow-right me-2"></i>
+                                Manage Users
+                            </button>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Complete CRUD operations with user details
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Card -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-history fa-3x text-info"></i>
+                            </div>
+                            <h4 class="card-title">Activity Logs</h4>
+                            <p class="card-text text-muted">
+                                Monitor all system activities and user interactions. 
+                                Track changes and maintain audit trails.
+                            </p>
+                            <button class="btn btn-info btn-lg" @onclick="GoToLogs">
+                                <i class="fas fa-arrow-right me-2"></i>
+                                View Logs
+                            </button>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Real-time activity monitoring and reporting
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <hr class="my-5">
+            <h2 class="text-center mb-4">Key Features</h2>
+            <div class="row g-4">
+                <div class="col-md-3 text-center">
+                    <div class="feature-item">
+                        <i class="fas fa-plus-circle fa-2x text-success mb-3"></i>
+                        <h5>Create Users</h5>
+                        <p class="text-muted small">Add new users with comprehensive details</p>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="feature-item">
+                        <i class="fas fa-edit fa-2x text-warning mb-3"></i>
+                        <h5>Edit Information</h5>
+                        <p class="text-muted small">Update user details and status</p>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="feature-item">
+                        <i class="fas fa-search fa-2x text-info mb-3"></i>
+                        <h5>Advanced Filtering</h5>
+                        <p class="text-muted small">Filter users by status and criteria</p>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line fa-2x text-primary mb-3"></i>
+                        <h5>Activity Tracking</h5>
+                        <p class="text-muted small">Monitor all user interactions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        cursor: pointer;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .feature-icon {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .feature-item {
+        padding: 1rem;
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .feature-item:hover {
+        transform: translateY(-3px);
+    }
+    
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+    
+    .btn-lg {
+        padding: 12px 30px;
+        border-radius: 8px;
+    }
+    
+    
+</style>
+
+@code {
+    private void GoToUsers()
+    {
+        Navigation.NavigateTo("/users");
+    }
+
+    private void GoToLogs()
+    {
+        Navigation.NavigateTo("/logs");
+    }
+}

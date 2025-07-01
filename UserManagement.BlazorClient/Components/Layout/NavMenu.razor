@@ -1,6 +1,9 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">UserManagement.BlazorClient</a>
+        <a class="navbar-brand" href="">
+            <i class="fas fa-users me-2"></i>
+            User Management
+        </a>
     </div>
 </div>
 
@@ -10,19 +13,33 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <i class="fas fa-home me-2"></i> Home
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
+            <NavLink class="nav-link" href="users">
+                <i class="fas fa-users me-2"></i> Users
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="logs">
+                <i class="fas fa-list me-2"></i> Activity Logs
+            </NavLink>
+        </div>
+        
+        <hr class="my-3 text-muted">
+        
+        <div class="nav-item px-3">
             <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+                <i class="fas fa-calculator me-2"></i> Counter
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+                <i class="fas fa-cloud me-2"></i> Weather
             </NavLink>
         </div>
     </nav>

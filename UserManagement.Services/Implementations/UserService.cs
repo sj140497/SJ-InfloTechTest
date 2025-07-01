@@ -5,7 +5,6 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Data;
 using UserManagement.Models;
-using UserManagement.Services.Constants;
 using UserManagement.Services.Domain.Interfaces;
 
 namespace UserManagement.Services.Domain.Implementations;
@@ -29,9 +28,9 @@ public class UserService : IUserService
     public async Task<IEnumerable<User>> FilterByActiveAsync(bool isActive) =>
         await _dataAccess.GetAll<User>().Where(x => x.IsActive == isActive).ToListAsync();
 
-    public async Task<IEnumerable<User>> GetAllAsync() => 
-        await _dataAccess.GetAll<User>().ToListAsync();
-    
+    public async Task<IEnumerable<User>> GetAllAsync()
+        => await _dataAccess.GetAll<User>().ToListAsync();
+
 
     /// <summary>
     /// Get a user by ID
@@ -118,24 +117,31 @@ public class UserService : IUserService
             if (duplicateEmail != null)
                 return Result.Fail<User>("Email address is already in use");
 
-            await _dataAccess.UpdateAsync(user);
-            
-            // Log the update with details about what changed
+            // Capture original values for logging before updating
             var changes = new List<string>();
             if (originalUser.Forename != user.Forename) changes.Add($"Forename: '{originalUser.Forename}' -> '{user.Forename}'");
             if (originalUser.Surname != user.Surname) changes.Add($"Surname: '{originalUser.Surname}' -> '{user.Surname}'");
             if (originalUser.Email != user.Email) changes.Add($"Email: '{originalUser.Email}' -> '{user.Email}'");
             if (originalUser.DateOfBirth != user.DateOfBirth) changes.Add($"DateOfBirth: '{originalUser.DateOfBirth:yyyy-MM-dd}' -> '{user.DateOfBirth:yyyy-MM-dd}'");
             if (originalUser.IsActive != user.IsActive) changes.Add($"Status: '{(originalUser.IsActive ? "Active" : "Inactive")}' -> '{(user.IsActive ? "Active" : "Inactive")}'");
+
+            // Update the tracked entity to avoid tracking conflicts
+            originalUser.Forename = user.Forename;
+            originalUser.Surname = user.Surname;
+            originalUser.Email = user.Email;
+            originalUser.DateOfBirth = user.DateOfBirth;
+            originalUser.IsActive = user.IsActive;
+
+            await _dataAccess.UpdateAsync(originalUser);
             
             await _userLogService.LogActionAsync(
-                userId: user.Id,
+                userId: originalUser.Id,
                 action: Constants.UserActions.Updated,
-                description: $"User updated: {user.Forename} {user.Surname}",
+                description: $"User updated: {originalUser.Forename} {originalUser.Surname}",
                 details: changes.Any() ? string.Join(", ", changes) : "No specific changes detected"
             );
             
-            return Result.Ok(user);
+            return Result.Ok(originalUser);
         }
         catch (System.Exception ex)
         {

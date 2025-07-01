@@ -1,6 +1,6 @@
 ﻿namespace UserManagement.Common.DTOs;
 
-public record UserDto(
+public sealed record UserDto(
     long Id,
     string Forename,
     string Surname,

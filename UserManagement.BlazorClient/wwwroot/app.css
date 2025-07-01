@@ -1,3 +1,5 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -57,4 +59,95 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+/* Custom styles for better UI */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.btn {
+    border-radius: 6px;
+}
+
+.badge {
+    border-radius: 12px;
+}
+
+.form-control, .form-select {
+    border-radius: 6px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Avatar styles */
+.avatar-circle {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.avatar-large {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.avatar-small {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Timeline styles */
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -18px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .btn-group .btn {
+        margin: 2px 0;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .avatar-circle, .avatar-small {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .avatar-large {
+        width: 60px;
+        height: 60px;
+        font-size: 18px;
+    }
 }

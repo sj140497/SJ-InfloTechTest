@@ -1,6 +1,6 @@
 ﻿namespace UserManagement.Common.DTOs.Contracts;
 
-public record UpdateUserDto(
+public sealed record UpdateUserDto(
     string Forename,
     string Surname,
     string Email,

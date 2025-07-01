@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using FluentResults;
 using UserManagement.Models;
+using UserManagement.Common.DTOs;
 
 namespace UserManagement.Services.Domain.Interfaces;
 
@@ -21,7 +22,7 @@ public interface IUserService
     /// <param name="id"></param>
     /// <returns></returns>
     Task<Result<User>> GetByIdAsync(long id);
-    
+
     /// <summary>
     /// Create a new user
     /// </summary>

@@ -9,8 +9,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFluentValidation(this IServiceCollection services)
     {
-        services.TryAddSingleton<IValidator<CreateUserDto>, CreateUserDtoValidator>();
-        services.TryAddSingleton<IValidator<UpdateUserDto>, UpdateUserDtoValidator>();
+        services.AddSingleton<CreateUserDtoValidator>();
+        services.AddSingleton<UpdateUserDtoValidator>();
         return services;
     }
 
