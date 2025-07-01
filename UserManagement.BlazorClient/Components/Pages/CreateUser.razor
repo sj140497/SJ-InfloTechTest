@@ -15,6 +15,21 @@
 
 <div class="row">
     <div class="col-md-6">
+        @if (apiErrors.Any())
+        {
+            <div class="alert alert-danger" role="alert">
+                <h6 class="alert-heading">
+                    <strong>Error creating user:</strong>
+                </h6>
+                <ul class="mb-0">
+                    @foreach (var error in apiErrors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            </div>
+        }
+
         <div class="card">
             <div class="card-body">
                 <EditForm Model="@userForm" OnValidSubmit="@HandleValidSubmit" FormName="CreateUserForm">
@@ -70,6 +85,7 @@
 @code {
     private UserFormModel userForm = new();
     private bool isCreating = false;
+    private List<string> apiErrors = new();
 
     public class UserFormModel
     {
@@ -93,6 +109,8 @@
         try
         {
             isCreating = true;
+            apiErrors.Clear(); // Clear previous errors
+            
             var createDto = new CreateUserDto(
                 userForm.Forename,
                 userForm.Surname,
@@ -104,10 +122,14 @@
             var createdUser = await UserService.CreateUserAsync(createDto);
             Navigation.NavigateTo($"/users/{createdUser.Id}");
         }
+        catch (ApiException ex)
+        {
+            apiErrors = ex.Errors;
+        }
         catch (Exception ex)
         {
+            apiErrors = new List<string> { "An unexpected error occurred. Please try again." };
             Console.WriteLine($"Error creating user: {ex.Message}");
-            // In production, show proper error message to user
         }
         finally
         {
