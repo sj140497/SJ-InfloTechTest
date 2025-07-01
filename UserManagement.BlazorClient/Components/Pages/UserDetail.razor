@@ -1,410 +1,157 @@
-@* @page "/users/{id:long}"
+@page "/users/{id:long}"
 @using UserManagement.Common.DTOs
 @using UserManagement.BlazorClient.Services
 @inject IUserApiService UserService
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>User Details - @(userDetail?.Forename ?? "Loading...")</PageTitle>
+<PageTitle>User Details</PageTitle>
 
-<div class="container-fluid py-4">
-    @if (isLoading)
-    {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Loading user details...</p>
-        </div>
-    }
-    else if (userDetail == null)
-    {
-        <div class="text-center py-5">
-            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">User not found</h5>
-            <p class="text-muted">The requested user could not be found.</p>
-            <button class="btn btn-primary" @onclick="GoBack">
-                <i class="fas fa-arrow-left me-2"></i>
-                Back to Users
-            </button>
-        </div>
-    }
-    else
-    {
-        <!-- Navigation Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="/users" class="text-decoration-none">
-                        <i class="fas fa-users me-1"></i>
-                        Users
-                    </a>
-                </li>
-                <li class="breadcrumb-item active">@userDetail.Forename @userDetail.Surname</li>
-            </ol>
-        </nav>
-
-        <div class="row">
-            <!-- User Information Card -->
-            <div class="col-lg-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-user me-2"></i>
-                            User Information
-                        </h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <div class="avatar-large mb-3">
-                            @userDetail.Forename.First()@userDetail.Surname.First()
-                        </div>
-                        <h4 class="mb-2">@userDetail.Forename @userDetail.Surname</h4>
-                        <p class="text-muted mb-3">ID: @userDetail.Id</p>
-                        
-                        @if (userDetail.IsActive)
-                        {
-                            <span class="badge bg-success fs-6 mb-3">
-                                <i class="fas fa-check me-1"></i>
-                                Active User
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary fs-6 mb-3">
-                                <i class="fas fa-times me-1"></i>
-                                Inactive User
-                            </span>
-                        }
-
-                        <hr>
-
-                        <div class="row text-start">
-                            <div class="col-12 mb-3">
-                                <label class="fw-bold text-muted">Email Address</label>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-envelope text-muted me-2"></i>
-                                    <span>@userDetail.Email</span>
-                                </div>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label class="fw-bold text-muted">Date of Birth</label>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-calendar text-muted me-2"></i>
-                                    <span>@userDetail.DateOfBirth.ToString("MMMM dd, yyyy")</span>
-                                </div>
-                                <small class="text-muted">Age: @CalculateAge(userDetail.DateOfBirth) years old</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-warning" @onclick="EditUser">
-                                <i class="fas fa-edit me-2"></i>
-                                Edit User
-                            </button>
-                            <button class="btn btn-outline-danger" @onclick="ConfirmDelete">
-                                <i class="fas fa-trash me-2"></i>
-                                Delete User
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Logs Card -->
-            <div class="col-lg-8 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-history me-2"></i>
-                            Recent Activity Logs
-                        </h5>
-                        <span class="badge bg-light text-dark">@userDetail.Logs.Count() logs</span>
-                    </div>
-                    <div class="card-body">
-                        @if (!userDetail.Logs.Any())
-                        {
-                            <div class="text-center py-4">
-                                <i class="fas fa-history fa-2x text-muted mb-3"></i>
-                                <p class="text-muted">No activity logs found for this user.</p>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="timeline">
-                                @foreach (var log in userDetail.Logs.OrderByDescending(l => l.Timestamp).Take(10))
-                                {
-                                    <div class="timeline-item">
-                                        <div class="timeline-marker">
-                                            <i class="fas fa-circle text-primary"></i>
-                                        </div>
-                                        <div class="timeline-content">
-                                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                                <span class="fw-bold action-badge @GetActionClass(log.Action)">
-                                                    @GetActionIcon(log.Action) @log.Action
-                                                </span>
-                                                <small class="text-muted">
-                                                    @log.Timestamp.ToString("MMM dd, yyyy HH:mm")
-                                                </small>
-                                            </div>
-                                            <p class="mb-1">@log.Description</p>
-                                            @if (!string.IsNullOrEmpty(log.Details))
-                                            {
-                                                <small class="text-muted">@log.Details</small>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                            
-                            @if (userDetail.Logs.Count() > 10)
-                            {
-                                <div class="text-center mt-3">
-                                    <button class="btn btn-outline-info" @onclick="ViewAllUserLogs">
-                                        <i class="fas fa-list me-2"></i>
-                                        View All @userDetail.Logs.Count() Logs
-                                    </button>
-                                </div>
-                            }
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between">
-                    <button class="btn btn-secondary" @onclick="GoBack">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        Back to Users
-                    </button>
-                    <button class="btn btn-info" @onclick="ViewAllLogs">
-                        <i class="fas fa-list me-2"></i>
-                        View All System Logs
-                    </button>
-                </div>
-            </div>
-        </div>
-    }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>User Details</h1>
+    <div>
+        <a href="/users/@Id/edit" class="btn btn-secondary me-2">Edit</a>
+        <a href="/users" class="btn btn-outline-secondary">Back to Users</a>
+    </div>
 </div>
 
-@if (showDeleteModal)
+@if (apiErrors.Any())
 {
-    <div class="modal fade show" style="display: block;" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Delete</h5>
-                    <button type="button" class="btn-close" @onclick="() => showDeleteModal = false"></button>
+    <div class="alert alert-danger" role="alert">
+        <h6 class="alert-heading">
+            <strong>Error:</strong>
+        </h6>
+        <ul class="mb-0">
+            @foreach (var error in apiErrors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (isLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (user != null)
+{
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Information</h5>
                 </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete <strong>@userDetail?.Forename @userDetail?.Surname</strong>?</p>
-                    <p class="text-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        This action cannot be undone and will remove all associated data.
-                    </p>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>ID:</th>
+                            <td>@user.Id</td>
+                        </tr>
+                        <tr>
+                            <th>Name:</th>
+                            <td>@user.Forename @user.Surname</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>@user.Email</td>
+                        </tr>
+                        <tr>
+                            <th>Date of Birth:</th>
+                            <td>@user.DateOfBirth.ToString("MMMM dd, yyyy")</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showDeleteModal = false">Cancel</button>
-                    <button type="button" class="btn btn-danger" @onclick="DeleteUser" disabled="@isDeleting">
-                        @if (isDeleting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                        }
-                        Delete User
-                    </button>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    @if (user.RecentLogs?.Any() == true)
+                    {
+                        <ul class="list-unstyled">
+                            @foreach (var log in user.RecentLogs.Take(5))
+                            {
+                                <li class="mb-2">
+                                    <small class="text-muted">@log.Timestamp.ToString("MMM dd, HH:mm")</small><br>
+                                    <span>@log.Action</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent activity</p>
+                    }
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show"></div>
 }
-
-<style>
-    .avatar-large {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 24px;
-        margin: 0 auto;
-    }
-    
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-    
-    .timeline-item {
-        position: relative;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .timeline-item:last-child {
-        border-bottom: none;
-    }
-    
-    .timeline-marker {
-        position: absolute;
-        left: -35px;
-        top: 5px;
-    }
-    
-    .timeline-content {
-        padding-left: 15px;
-    }
-    
-    .action-badge {
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 0.75em;
-    }
-    
-    .action-created { background-color: #d4edda; color: #155724; }
-    .action-updated { background-color: #fff3cd; color: #856404; }
-    .action-viewed { background-color: #d1ecf1; color: #0c5460; }
-    .action-deleted { background-color: #f8d7da; color: #721c24; }
-    .action-default { background-color: #e2e3e5; color: #383d41; }
-    
-    .card {
-        border: none;
-        border-radius: 12px;
-    }
-    
-    .card-header {
-        border-radius: 12px 12px 0 0 !important;
-    }
-    
-    .breadcrumb {
-        background: none;
-        padding: 0;
-    }
-    
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: "›";
-        color: #6c757d;
-    }
-</style>
+else
+{
+    <div class="alert alert-danger">
+        <h4>User Not Found</h4>
+        <p>The user you're looking for doesn't exist.</p>
+        <a href="/users" class="btn btn-primary">Back to Users</a>
+    </div>
+}
 
 @code {
     [Parameter] public long Id { get; set; }
     
-    private UserDetailDto? userDetail;
+    private UserDetailDto? user;
     private bool isLoading = true;
-    private bool showDeleteModal = false;
-    private bool isDeleting = false;
+    private List<string> apiErrors = new();
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        await LoadUserDetail();
+        await LoadUser();
     }
 
-    private async Task LoadUserDetail()
+    private async Task LoadUser()
     {
         try
         {
             isLoading = true;
-            userDetail = await UserService.GetUserAsync(Id);
+            apiErrors.Clear();
+            user = await UserService.GetUserAsync(Id);
         }
-        catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+        catch (ApiException ex)
         {
-            userDetail = null;
+            apiErrors = ex.Errors;
+            user = null;
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error loading user details: {ex.Message}");
-            userDetail = null;
+            apiErrors = new List<string> { "An error occurred while loading user details. Please try again." };
+            Console.WriteLine($"Error loading user: {ex.Message}");
+            user = null;
         }
         finally
         {
             isLoading = false;
         }
     }
-
-    private void EditUser()
-    {
-        Navigation.NavigateTo($"/users/{Id}/edit");
-    }
-
-    private void ConfirmDelete()
-    {
-        showDeleteModal = true;
-    }
-
-    private async Task DeleteUser()
-    {
-        try
-        {
-            isDeleting = true;
-            await UserService.DeleteUserAsync(Id);
-            Navigation.NavigateTo("/users");
-        }
-        catch (Exception ex)
-        {
-            await JS.InvokeVoidAsync("alert", $"Error deleting user: {ex.Message}");
-        }
-        finally
-        {
-            isDeleting = false;
-            showDeleteModal = false;
-        }
-    }
-
-    private void GoBack()
-    {
-        Navigation.NavigateTo("/users");
-    }
-
-    private void ViewAllLogs()
-    {
-        Navigation.NavigateTo("/logs");
-    }
-
-    private void ViewAllUserLogs()
-    {
-        Navigation.NavigateTo($"/users/{Id}/logs");
-    }
-
-    private int CalculateAge(DateTime birthDate)
-    {
-        var today = DateTime.Today;
-        var age = today.Year - birthDate.Year;
-        if (birthDate.Date > today.AddYears(-age)) age--;
-        return age;
-    }
-
-    private string GetActionClass(string action)
-    {
-        return action.ToLower() switch
-        {
-            "created" => "action-created",
-            "updated" => "action-updated", 
-            "viewed" => "action-viewed",
-            "deleted" => "action-deleted",
-            _ => "action-default"
-        };
-    }
-
-    private string GetActionIcon(string action)
-    {
-        return action.ToLower() switch
-        {
-            "created" => "fas fa-plus",
-            "updated" => "fas fa-edit",
-            "viewed" => "fas fa-eye", 
-            "deleted" => "fas fa-trash",
-            _ => "fas fa-circle"
-        };
-    }
 }
- *@

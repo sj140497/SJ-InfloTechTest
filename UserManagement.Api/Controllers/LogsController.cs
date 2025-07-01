@@ -13,17 +13,32 @@ public class LogsController(IUserLogService logService, IUserService userService
     /// <summary>
     /// Get all system logs
     /// </summary>
-    /// <returns>List of all logs</returns>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 20, max: 100)</param>
+    /// <returns>Paginated list of logs</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserLogDto>>> GetAllLogs()
+    public async Task<ActionResult<PagedResultDto<UserLogDto>>> GetAllLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         try
         {
-            var logs = await logService.GetAllLogsAsync();
-            
-            var logDtos = await ConvertLogsToDto(logs);
+            // Validate parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100; // Limit max page size for performance
 
-            return Ok(logDtos);
+            var pagedLogs = await logService.GetAllLogsAsync(page, pageSize);
+            
+            var logDtos = await ConvertLogsToDto(pagedLogs.Items);
+
+            var result = new PagedResultDto<UserLogDto>
+            {
+                Items = logDtos,
+                CurrentPage = pagedLogs.CurrentPage,
+                PageSize = pagedLogs.PageSize,
+                TotalCount = pagedLogs.TotalCount
+            };
+
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -95,109 +110,6 @@ public class LogsController(IUserLogService logService, IUserService userService
         {
             logger.LogError(ex, "Error retrieving log {LogId}", id);
             return StatusCode(500, new { message = "An error occurred while retrieving the log" });
-        }
-    }
-
-    /// <summary>
-    /// Get logs filtered by action type
-    /// </summary>
-    /// <param name="action">Action type to filter by</param>
-    /// <returns>Filtered list of logs</returns>
-    [HttpGet("action/{action}")]
-    public async Task<ActionResult<IEnumerable<UserLogDto>>> GetLogsByAction(string action)
-    {
-        try
-        {
-            var allLogs = await logService.GetAllLogsAsync();
-            var filteredLogs = allLogs.Where(l => 
-                l.Action.Equals(action, StringComparison.OrdinalIgnoreCase));
-
-            var logDtos = await ConvertLogsToDto(filteredLogs);
-
-            return Ok(logDtos);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving logs for action {Action}", action);
-            return StatusCode(500, new { message = "An error occurred while retrieving filtered logs" });
-        }
-    }
-
-    /// <summary>
-    /// Get logs within a date range
-    /// </summary>
-    /// <param name="startDate">Start date (optional)</param>
-    /// <param name="endDate">End date (optional)</param>
-    /// <returns>Filtered list of logs</returns>
-    [HttpGet("date-range")]
-    public async Task<ActionResult<IEnumerable<UserLogDto>>> GetLogsByDateRange(
-        [FromQuery] DateTime? startDate = null, 
-        [FromQuery] DateTime? endDate = null)
-    {
-        try
-        {
-            var allLogs = await logService.GetAllLogsAsync();
-            var filteredLogs = allLogs.AsEnumerable();
-
-            if (startDate.HasValue)
-            {
-                filteredLogs = filteredLogs.Where(l => l.Timestamp >= startDate.Value);
-            }
-
-            if (endDate.HasValue)
-            {
-                filteredLogs = filteredLogs.Where(l => l.Timestamp <= endDate.Value);
-            }
-
-            var logDtos = await ConvertLogsToDto(filteredLogs);
-
-            return Ok(logDtos.OrderByDescending(l => l.Timestamp));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving logs by date range");
-            return StatusCode(500, new { message = "An error occurred while retrieving logs by date range" });
-        }
-    }
-
-    /// <summary>
-    /// Get log statistics
-    /// </summary>
-    /// <returns>Log statistics summary</returns>
-    [HttpGet("statistics")]
-    public async Task<ActionResult<object>> GetLogStatistics()
-    {
-        try
-        {
-            var allLogs = await logService.GetAllLogsAsync();
-            var logsList = allLogs.ToList();
-
-            var statistics = new
-            {
-                TotalLogs = logsList.Count,
-                ActionCounts = logsList
-                    .GroupBy(l => l.Action)
-                    .ToDictionary(g => g.Key, g => g.Count()),
-                RecentActivity = logsList
-                    .OrderByDescending(l => l.Timestamp)
-                    .Take(5)
-                    .Select(l => new {
-                        l.Action,
-                        l.Timestamp,
-                        l.Description
-                    }),
-                LogsByDay = logsList
-                    .Where(l => l.Timestamp >= DateTime.Today.AddDays(-7))
-                    .GroupBy(l => l.Timestamp.Date)
-                    .ToDictionary(g => g.Key.ToString("yyyy-MM-dd"), g => g.Count())
-            };
-
-            return Ok(statistics);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving log statistics");
-            return StatusCode(500, new { message = "An error occurred while retrieving log statistics" });
         }
     }
 

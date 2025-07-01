@@ -131,7 +131,6 @@ public class UserServiceIntegrationScenarioTests : IntegrationTestBase
 
         // Verify logging was called for each operation
         MockUserLogService.Verify(x => x.LogActionAsync(userId, "Created", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
-        MockUserLogService.Verify(x => x.LogActionAsync(userId, "Viewed", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         MockUserLogService.Verify(x => x.LogActionAsync(userId, "Updated", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         MockUserLogService.Verify(x => x.LogActionAsync(userId, "Deleted", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }

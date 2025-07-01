@@ -1,3 +1,37 @@
+### How to run
+Simply setup a new profile in Visual Studio to run both `UserManagement.BlazorClient` and `UserManagement.Api` (or run both separately in different instances)
+`UserManagement.BlazorClient` runs over https on URL `https://localhost:7020`
+`UserManagement.Api` runs over https on URL `https://localhost:7287`
+
+These have both been setup in the relevant applications. Ideally these would be powered by configuration and not hardcoded.
+
+
+## Changes Made to the Original Project
+
+### 🎯 **Blazor Client Implementation**
+- Created comprehensive pages: Home, Users (list), User Details, Add User, Edit User, and Activity Logs
+- **structured error handling** with custom `ApiException` for better user experience
+- **Implemented server-side pagination** for optimal performance with large datasets (20 items per page)
+
+### 🔧 **Enhanced User Management Features**
+- **Implemented full CRUD operations**: Create, Read, Update, Delete users with proper validation
+- **Added user filtering**: Show All, Active Only, Non-Active users functionality
+- **Enhanced data validation** using FluentValidation with comprehensive error messaging
+
+### 🏗️ **Architectural Improvements**
+- **Frontend**: Migration from MVC Razor Pages to Blazor Server
+- **API-First Architecture**: Clean separation between Blazor client and Web API
+- **Result Pattern**: Using FluentResults for robust error handling
+- **DTO Pattern**: Clean data transfer objects for API communication - using sealed records for immutability enforcement
+
+### 🧪 **Testing & Quality**
+- **Maintained comprehensive test suite** with updated test cases
+- **Built API integration tests** using custom TestWebApplicationFactory and API Program.cs
+- Used Moq to mock logging behaviour in the application
+    -- I did not mock any database behaviour due to issues with asynchronous IQueryable calls (GetAllAsync) not interfacing directly with EF Core.
+
+
+
 # User Management Technical Exercise
 
 The exercise is an ASP.NET Core web application backed by Entity Framework Core, which faciliates management of some fictional users.

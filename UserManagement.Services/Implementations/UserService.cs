@@ -48,14 +48,6 @@ public class UserService : IUserService
                 return Result.Fail<User>($"User with ID {id} not found");
             }
             
-            // Log the view action
-            await _userLogService.LogActionAsync(
-                userId: user.Id,
-                action: Constants.UserActions.Viewed,
-                description: $"User profile viewed for {user.Forename} {user.Surname}",
-                details: $"Email: {user.Email}, Status: {(user.IsActive ? "Active" : "Inactive")}"
-            );
-            
             return Result.Ok(user);
         }
         catch (System.Exception ex)

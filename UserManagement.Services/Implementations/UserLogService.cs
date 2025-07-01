@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using UserManagement.Data;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
+using UserManagement.Common.DTOs;
 
 namespace UserManagement.Services.Domain.Implementations;
 
@@ -58,8 +59,24 @@ public class UserLogService(IDataContext dataContext) : IUserLogService
         }
     }
 
-    public async Task<IEnumerable<UserLog>> GetAllLogsAsync() =>
-        await dataContext.GetAll<UserLog>()
-        .OrderByDescending(log => log.Timestamp)
-        .ToListAsync();
+    public async Task<PagedResultDto<UserLog>> GetAllLogsAsync(int page, int pageSize)
+    {
+        var query = dataContext.GetAll<UserLog>()
+            .OrderByDescending(log => log.Timestamp);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResultDto<UserLog>
+        {
+            Items = items,
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
 }

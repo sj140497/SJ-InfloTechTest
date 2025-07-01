@@ -1,9 +1,11 @@
-﻿namespace UserManagement.Common.DTOs.Contracts;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace UserManagement.Common.DTOs.Contracts;
 
 public sealed record UpdateUserDto(
-    string Forename,
-    string Surname,
-    string Email,
-    DateTime DateOfBirth,
+    [Required, MaxLength(100)] string Forename,
+    [Required, MaxLength(100)] string Surname,
+    [Required, EmailAddress, MaxLength(200)] string Email,
+    [Required] DateTime DateOfBirth,
     bool IsActive
 );

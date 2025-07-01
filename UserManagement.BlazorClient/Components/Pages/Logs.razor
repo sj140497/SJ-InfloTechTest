@@ -2,205 +2,136 @@
 @using UserManagement.Common.DTOs
 @using UserManagement.BlazorClient.Services
 @inject ILogApiService LogService
-@inject NavigationManager Navigation
-@inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>System Logs</PageTitle>
+<PageTitle>Activity Logs</PageTitle>
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">
-                        <i class="fas fa-list me-2"></i>
-                        System Activity Logs
-                    </h3>
-                    <button class="btn btn-light" @onclick="RefreshLogs">
-                        <i class="fas fa-refresh me-2"></i>
-                        Refresh
-                    </button>
-                </div>
-                <div class="card-body">
-                    @if (isLoading)
-                    {
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2 text-muted">Loading system logs...</p>
-                        </div>
-                    }
-                    else if (logs == null || !logs.Any())
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-list fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No logs found</h5>
-                            <p class="text-muted">No activity has been logged yet.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <!-- Summary Cards -->
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-list fa-2x mb-2"></i>
-                                        <h4>@logs.Count()</h4>
-                                        <small>Total Logs</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-plus fa-2x mb-2"></i>
-                                        <h4>@logs.Count(l => l.Action.Equals("Created", StringComparison.OrdinalIgnoreCase))</h4>
-                                        <small>Created</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-edit fa-2x mb-2"></i>
-                                        <h4>@logs.Count(l => l.Action.Equals("Updated", StringComparison.OrdinalIgnoreCase))</h4>
-                                        <small>Updated</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-eye fa-2x mb-2"></i>
-                                        <h4>@logs.Count(l => l.Action.Equals("Viewed", StringComparison.OrdinalIgnoreCase))</h4>
-                                        <small>Viewed</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Logs Table -->
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>User</th>
-                                        <th>Action</th>
-                                        <th>Description</th>
-                                        <th>Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var log in logs.OrderByDescending(l => l.Timestamp))
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="fw-semibold">@log.Timestamp.ToString("MMM dd, yyyy")</div>
-                                                <small class="text-muted">@log.Timestamp.ToString("HH:mm:ss")</small>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-small me-2">
-                                                        @if (!string.IsNullOrEmpty(log.UserName))
-                                                        {
-                                                            @log.UserName.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (a, b) => a + b)
-                                                        }
-                                                        else
-                                                        {
-                                                            <span>??</span>
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-semibold">@log.UserName</div>
-                                                        <small class="text-muted">ID: @log.UserId</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge @GetActionClass(log.Action)">
-                                                    @GetActionIcon(log.Action) @log.Action
-                                                </span>
-                                            </td>
-                                            <td>@log.Description</td>
-                                            <td>
-                                                @if (!string.IsNullOrEmpty(log.Details))
-                                                {
-                                                    <small class="text-muted">@log.Details</small>
-                                                }
-                                                else
-                                                {
-                                                    <small class="text-muted">-</small>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
-                <div class="card-footer text-center">
-                    <button class="btn btn-primary" @onclick="GoToUsers">
-                        <i class="fas fa-users me-2"></i>
-                        Back to Users
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Activity Logs</h1>
+    <button class="btn btn-outline-secondary" @onclick="RefreshLogs">Refresh</button>
 </div>
 
-<style>
-    .avatar-small {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 11px;
-    }
-    
-    .card {
-        border: none;
-        border-radius: 12px;
-    }
-    
-    .card-header {
-        border-radius: 12px 12px 0 0 !important;
-    }
-    
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .table td {
-        vertical-align: middle;
-    }
-    
-    .badge {
-        font-size: 0.75em;
-        padding: 6px 10px;
-    }
-    
-    .bg-success { background-color: #28a745 !important; }
-    .bg-warning { background-color: #ffc107 !important; }
-    .bg-info { background-color: #17a2b8 !important; }
-    .bg-danger { background-color: #dc3545 !important; }
-</style>
+@if (isLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (paginatedLogs?.Any() == true)
+{
+    <!-- Summary Info -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <small class="text-muted">
+            Showing @((currentPage - 1) * pageSize + 1) - @Math.Min(currentPage * pageSize, totalLogs) of @totalLogs logs
+        </small>
+        <small class="text-muted">
+            Page @currentPage of @totalPages
+        </small>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User ID</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in paginatedLogs)
+                {
+                    <tr>
+                        <td>@log.Timestamp.ToString("MMM dd, yyyy HH:mm:ss")</td>
+                        <td>@log.UserId</td>
+                        <td>
+                            <span class="badge @GetActionBadgeClass(log.Action)">
+                                @log.Action
+                            </span>
+                        </td>
+                        <td>@log.Details</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <nav aria-label="Logs pagination">
+        <ul class="pagination justify-content-center">
+            <!-- Previous Button -->
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => GoToPage(currentPage - 1)" disabled="@(currentPage == 1)">
+                    Previous
+                </button>
+            </li>
+
+            <!-- First Page -->
+            @if (currentPage > 3)
+            {
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                </li>
+                @if (currentPage > 4)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+
+            <!-- Page Numbers Around Current Page -->
+            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <button class="page-link" @onclick="() => GoToPage(i)">@i</button>
+                </li>
+            }
+
+            <!-- Last Page -->
+            @if (currentPage < totalPages - 2)
+            {
+                @if (currentPage < totalPages - 3)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => GoToPage(totalPages)">@totalPages</button>
+                </li>
+            }
+
+            <!-- Next Button -->
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => GoToPage(currentPage + 1)" disabled="@(currentPage == totalPages)">
+                    Next
+                </button>
+            </li>
+        </ul>
+    </nav>
+}
+else
+{
+    <div class="alert alert-info">
+        <h4>No logs found</h4>
+        <p>There are no activity logs to display.</p>
+    </div>
+}
 
 @code {
-    private IEnumerable<UserLogDto>? logs;
+    private PagedResultDto<UserLogDto>? pagedResult;
+    private IEnumerable<UserLogDto>? paginatedLogs;
     private bool isLoading = true;
+    
+    // Pagination properties
+    private const int pageSize = 20;
+    private int currentPage = 1;
+    private int totalLogs = 0;
+    private int totalPages = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -212,11 +143,19 @@
         try
         {
             isLoading = true;
-            logs = await LogService.GetAllLogsAsync();
+            pagedResult = await LogService.GetAllLogsAsync(currentPage, pageSize);
+            
+            if (pagedResult != null)
+            {
+                paginatedLogs = pagedResult.Items;
+                totalLogs = pagedResult.TotalCount;
+                totalPages = pagedResult.TotalPages;
+                currentPage = pagedResult.CurrentPage;
+            }
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error loading logs: {ex.Message}");
+            Console.WriteLine($"Error loading logs: {ex.Message}");
         }
         finally
         {
@@ -226,35 +165,27 @@
 
     private async Task RefreshLogs()
     {
+        currentPage = 1; // Reset to first page on refresh
         await LoadLogs();
     }
 
-    private void GoToUsers()
+    private async Task GoToPage(int page)
     {
-        Navigation.NavigateTo("/users");
+        if (page >= 1 && page <= totalPages && page != currentPage)
+        {
+            currentPage = page;
+            await LoadLogs();
+        }
     }
 
-    private string GetActionClass(string action)
+    private string GetActionBadgeClass(string action)
     {
         return action.ToLower() switch
         {
-            "created" => "bg-success text-white",
-            "updated" => "bg-warning text-dark",
-            "viewed" => "bg-info text-white",
-            "deleted" => "bg-danger text-white",
-            _ => "bg-secondary text-white"
-        };
-    }
-
-    private string GetActionIcon(string action)
-    {
-        return action.ToLower() switch
-        {
-            "created" => "fas fa-plus",
-            "updated" => "fas fa-edit",
-            "viewed" => "fas fa-eye",
-            "deleted" => "fas fa-trash",
-            _ => "fas fa-circle"
+            "created" => "bg-success",
+            "updated" => "bg-warning",
+            "deleted" => "bg-danger",
+            _ => "bg-secondary"
         };
     }
 }

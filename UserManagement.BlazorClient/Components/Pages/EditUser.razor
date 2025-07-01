@@ -1,0 +1,198 @@
+@page "/users/{id:long}/edit"
+@using UserManagement.Common.DTOs
+@using UserManagement.Common.DTOs.Contracts
+@using UserManagement.BlazorClient.Services
+@using System.ComponentModel.DataAnnotations
+@inject IUserApiService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Edit User</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Edit User</h1>
+    <div>
+        <a href="/users/@Id" class="btn btn-outline-secondary me-2">View Details</a>
+        <a href="/users" class="btn btn-outline-secondary">Back to Users</a>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (userForm != null)
+{
+    <div class="row">
+        <div class="col-md-6">
+            @if (apiErrors.Any())
+            {
+                <div class="alert alert-danger" role="alert">
+                    <h6 class="alert-heading">
+                        <strong>Error updating user:</strong>
+                    </h6>
+                    <ul class="mb-0">
+                        @foreach (var error in apiErrors)
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body">
+                    <EditForm Model="@userForm" OnValidSubmit="@HandleValidSubmit" FormName="EditUserForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="mb-3">
+                            <label for="forename" class="form-label">First Name</label>
+                            <InputText id="forename" class="form-control" @bind-Value="userForm.Forename" />
+                            <ValidationMessage For="@(() => userForm.Forename)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="surname" class="form-label">Last Name</label>
+                            <InputText id="surname" class="form-control" @bind-Value="userForm.Surname" />
+                            <ValidationMessage For="@(() => userForm.Surname)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email" type="email" class="form-control" @bind-Value="userForm.Email" />
+                            <ValidationMessage For="@(() => userForm.Email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                            <InputDate id="dateOfBirth" class="form-control" @bind-Value="userForm.DateOfBirth" />
+                            <ValidationMessage For="@(() => userForm.DateOfBirth)" />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="userForm.IsActive" />
+                            <label class="form-check-label" for="isActive">
+                                Active User
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                Update User
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger">
+        <h4>User Not Found</h4>
+        <p>The user you're trying to edit doesn't exist.</p>
+        <a href="/users" class="btn btn-primary">Back to Users</a>
+    </div>
+}
+
+@code {
+    [Parameter] public long Id { get; set; }
+    
+    private UserFormModel? userForm;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private List<string> apiErrors = new();
+
+    public class UserFormModel
+    {
+        [Required, MaxLength(100)]
+        public string Forename { get; set; } = "";
+
+        [Required, MaxLength(100)]
+        public string Surname { get; set; } = "";
+
+        [Required, EmailAddress, MaxLength(200)]
+        public string Email { get; set; } = "";
+
+        [Required]
+        public DateTime DateOfBirth { get; set; }
+
+        public bool IsActive { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUser();
+    }
+
+    private async Task LoadUser()
+    {
+        try
+        {
+            isLoading = true;
+            var user = await UserService.GetUserAsync(Id);
+            userForm = new UserFormModel
+            {
+                Forename = user.Forename,
+                Surname = user.Surname,
+                Email = user.Email,
+                DateOfBirth = user.DateOfBirth,
+                IsActive = user.IsActive
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user: {ex.Message}");
+            userForm = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (userForm == null) return;
+
+        try
+        {
+            isSubmitting = true;
+            apiErrors.Clear(); // Clear previous errors
+            
+            var updateDto = new UpdateUserDto(
+                userForm.Forename,
+                userForm.Surname,
+                userForm.Email,
+                userForm.DateOfBirth,
+                userForm.IsActive
+            );
+            
+            var updatedUser = await UserService.UpdateUserAsync(Id, updateDto);
+            Navigation.NavigateTo($"/users/{Id}");
+        }
+        catch (ApiException ex)
+        {
+            apiErrors = ex.Errors;
+        }
+        catch (Exception ex)
+        {
+            apiErrors = new List<string> { "An unexpected error occurred. Please try again." };
+            Console.WriteLine($"Error updating user: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

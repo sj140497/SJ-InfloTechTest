@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentResults;
 using UserManagement.Models;
+using UserManagement.Common.DTOs;
 
 namespace UserManagement.Services.Domain.Interfaces;
 
@@ -31,8 +32,10 @@ public interface IUserLogService
     Task<Result<UserLog>> GetLogByIdAsync(long id);
 
     /// <summary>
-    /// Get all logs in the system
+    /// Get all logs in the system with pagination
     /// </summary>
-    /// <returns>List of all user logs</returns>
-    Task<IEnumerable<UserLog>> GetAllLogsAsync();
+    /// <param name="page">Page number (1-based)</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <returns>Paginated list of user logs</returns>
+    Task<PagedResultDto<UserLog>> GetAllLogsAsync(int page, int pageSize);
 }

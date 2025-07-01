@@ -1,7 +1,4 @@
-﻿using FluentValidation;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using UserManagement.Api.Validators;
-using UserManagement.Common.DTOs.Contracts;
+﻿using UserManagement.Api.Validators;
 
 namespace UserManagement.Api.Extensions;
 

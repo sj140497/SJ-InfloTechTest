@@ -32,7 +32,11 @@ public class UserApiService : IUserApiService
     {
         var url = isActive.HasValue ? $"api/users?isActive={isActive}" : "api/users";
         var response = await _httpClient.GetAsync(url);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleErrorResponse(response);
+        }
         
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<IEnumerable<UserDto>>(json, _jsonOptions) ?? new List<UserDto>();
@@ -41,7 +45,11 @@ public class UserApiService : IUserApiService
     public async Task<UserDetailDto> GetUserAsync(long id)
     {
         var response = await _httpClient.GetAsync($"api/users/{id}");
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleErrorResponse(response);
+        }
         
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<UserDetailDto>(json, _jsonOptions) 
@@ -54,7 +62,11 @@ public class UserApiService : IUserApiService
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PostAsync("api/users", content);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleErrorResponse(response);
+        }
         
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<UserDto>(responseJson, _jsonOptions)
@@ -67,7 +79,11 @@ public class UserApiService : IUserApiService
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         
         var response = await _httpClient.PutAsync($"api/users/{id}", content);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleErrorResponse(response);
+        }
         
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<UserDto>(responseJson, _jsonOptions)
@@ -77,6 +93,51 @@ public class UserApiService : IUserApiService
     public async Task DeleteUserAsync(long id)
     {
         var response = await _httpClient.DeleteAsync($"api/users/{id}");
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            await HandleErrorResponse(response);
+        }
+    }
+
+    private async Task HandleErrorResponse(HttpResponseMessage response)
+    {
+        var errorContent = await response.Content.ReadAsStringAsync();
+        var statusCode = (int)response.StatusCode;
+
+        try
+        {
+            // Try to parse as array of strings (validation errors)
+            var errorArray = JsonSerializer.Deserialize<string[]>(errorContent, _jsonOptions);
+            if (errorArray != null && errorArray.Length > 0)
+            {
+                throw new ApiException(statusCode, errorArray.ToList());
+            }
+        }
+        catch (JsonException)
+        {
+            // Not an array, try to parse as object with message property
+            try
+            {
+                var errorObject = JsonSerializer.Deserialize<ErrorResponse>(errorContent, _jsonOptions);
+                if (errorObject?.Message != null)
+                {
+                    throw new ApiException(statusCode, errorObject.Message);
+                }
+            }
+            catch (JsonException)
+            {
+                // Fallback to raw content
+                throw new ApiException(statusCode, string.IsNullOrEmpty(errorContent) ? "An error occurred" : errorContent);
+            }
+        }
+
+        // Fallback if no specific error format matched
+        throw new ApiException(statusCode, $"Request failed with status {response.StatusCode}");
+    }
+
+    private class ErrorResponse
+    {
+        public string? Message { get; set; }
     }
 }

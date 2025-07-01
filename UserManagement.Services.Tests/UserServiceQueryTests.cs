@@ -58,7 +58,7 @@ public class UserServiceQueryTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetByIdAsync_WithValidId_ShouldReturnUserAndLogViewAction()
+    public async Task GetByIdAsync_WithValidId_ShouldReturnUser()
     {
         // Arrange
         var testUser = await CreateTestUserAsync("John", "Doe", "john@example.com", true);
@@ -72,12 +72,7 @@ public class UserServiceQueryTests : IntegrationTestBase
         result.Value.Id.Should().Be(testUser.Id);
         result.Value.Email.Should().Be("john@example.com");
 
-        // Verify logging was called for view action
-        MockUserLogService.Verify(x => x.LogActionAsync(
-            testUser.Id,
-            "Viewed",
-            It.IsAny<string>(),
-            It.IsAny<string>()), Times.Once);
+        // User retrieval should not trigger any logging
     }
 
     [Fact]
