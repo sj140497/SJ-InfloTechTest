@@ -29,6 +29,7 @@ These have both been setup in the relevant applications. Ideally these would be 
 - **Built API integration tests** using custom TestWebApplicationFactory and API Program.cs
 - Used Moq to mock logging behaviour in the application
     -- I did not mock any database behaviour due to issues with asynchronous IQueryable calls (GetAllAsync) not interfacing directly with EF Core.
+- I would have liked to spend more time on testing - especially Log API/Service testing - but time got short.
 
 
 
