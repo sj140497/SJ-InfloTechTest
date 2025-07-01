@@ -3,7 +3,7 @@ Simply setup a new profile in Visual Studio to run both `UserManagement.BlazorCl
 `UserManagement.BlazorClient` runs over https on URL `https://localhost:7020`
 `UserManagement.Api` runs over https on URL `https://localhost:7287`
 
-These have both been setup in the relevant applications. Ideally these would be powered by configuration and not hardcoded.
+These have both been setup in the relevant applications. Ideally these would be powered by configuration and not hardcoded, for when delpoying to higher environments.
 
 
 ## Changes Made to the Original Project
